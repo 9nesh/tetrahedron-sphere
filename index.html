@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HW5 CS390 - Tetrahedron Sphere</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="controls">
+        <button id="Button0"><i class="fas fa-plus"></i> Increase Subdivisions</button>
+        <button id="Button1"><i class="fas fa-minus"></i> Decrease Subdivisions</button>
+    </div>
+    <div class="angle-display">
+        <div class="angle">Subdivisions: <span id="subdivValue">0</span></div>
+        <div class="angle">θ: <span id="thetaValue">0.8</span></div>
+        <div class="angle">φ: <span id="phiValue">0.8</span></div>
+    </div>
+    <div class="controls">
+        <button id="Button2"><i class="fas fa-plus"></i> Increase θ</button>
+        <button id="Button3"><i class="fas fa-minus"></i> Decrease θ</button>
+        <button id="Button4"><i class="fas fa-plus"></i> Increase φ</button>
+        <button id="Button5"><i class="fas fa-minus"></i> Decrease φ</button>
+    </div>
+
+    <canvas id="gl-canvas" width="512" height="512">
+        Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
+
+// Vertex attributes
+in vec4 aPosition;
+in vec4 aNormal;
+out vec4 vColor;
+
+// Material and light properties
+uniform vec4 uAmbientProduct;
+uniform vec4 uDiffuseProduct;
+uniform vec4 uSpecularProduct;
+uniform vec4 uLightPosition;
+uniform float uShininess;
+
+// Transformation matrices
+uniform mat4 uModelMatrix;
+uniform mat4 uViewMatrix;
+uniform mat4 uProjectionMatrix;
+uniform mat3 uNormalMatrix;
+
+void main() {
+    // Transform vertex to view space
+    vec4 worldPos = uModelMatrix * aPosition;
+    vec4 viewPos = uViewMatrix * worldPos;
+    vec3 pos = viewPos.xyz;
+
+    // Transform normal and normalize
+    vec3 N = normalize(uNormalMatrix * aNormal.xyz);
+
+    // Calculate light vector in world space (do not transform by view matrix)
+    vec3 L = normalize(uLightPosition.xyz - worldPos.xyz);
+
+    // Calculate view vector (camera is at origin in view space)
+    vec3 V = normalize(-pos);
+
+    // Blinn-Phong Model: Calculate halfway vector between light and view vectors
+    vec3 H = normalize(L + V);
+
+    // Calculate diffuse and specular coefficients
+    float Kd = max(dot(L, N), 0.0);  // Diffuse reflection coefficient
+    float Ks = pow(max(dot(N, H), 0.0), uShininess);  // Specular reflection coefficient
+
+    // Initialize lighting components
+    vec4 ambient = uAmbientProduct;   // Ambient component is always present
+    vec4 diffuse = vec4(0.0);         // Initialize diffuse component
+    vec4 specular = vec4(0.0);        // Initialize specular component
+
+    // Only add diffuse and specular components if surface faces light
+    if(dot(L, N) > 0.0) {
+        diffuse = Kd * uDiffuseProduct;    // Diffuse component
+        specular = Ks * uSpecularProduct;   // Specular component
+    }
+
+    // Transform vertex to clip space
+    gl_Position = uProjectionMatrix * viewPos;
+
+    // Final color is sum of all lighting components
+    vColor = ambient + diffuse + specular;
+    vColor.a = 1.0;  // Set alpha to 1.0 for full opacity
+}</script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
+precision mediump float;
+
+in vec4 vColor;
+out vec4 fColor;
+
+void main() {
+    fColor = vColor;
+}</script>
+
+    <script type="module" src="MV.js"></script>
+    <script type="module" src="initShaders.js"></script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
