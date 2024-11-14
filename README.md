@@ -1,6 +1,6 @@
 # WebGL Tetrahedron
 
-This project is a WebGL application that renders a tetrahedron and allows for interactive manipulation of its view. Follow the instructions below to run the code.
+Live at [https://9nesh.github.io/tetrahedron-sphere/](https://9nesh.github.io/tetrahedron-sphere/)
 
 ## Prerequisites
 
