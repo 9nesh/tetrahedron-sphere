@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HW5 CS390 - Tetrahedron Sphere</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 15px;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            gap: 15px;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            scrollbar-width: thin;  /* For Firefox */
+            scrollbar-color: #1a73e8 #f0f2f5;  /* For Firefox */
+        }
+
+        /* Webkit scrollbar styling (Chrome, Safari, Edge) */
+        .control-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .control-panel::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 4px;
+        }
+
+        .control-panel::-webkit-scrollbar-thumb {
+            background: #1a73e8;
+            border-radius: 4px;
+        }
+
+        .control-panel::-webkit-scrollbar-thumb:hover {
+            background: #1557b0;
+        }
+
+        .canvas-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .control-section {
+            margin-bottom: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .control-section h3 {
+            margin: 0 0 8px 0;
+            color: #1a73e8;
+            font-size: 14px;
+        }
+
+        .status-display {
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 4px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .status-label {
+            color: #5f6368;
+        }
+
+        .status-value {
+            color: #1a73e8;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        button {
+            width: 100%;
+            padding: 6px;
+            margin: 2px 0;
+            border: none;
+            border-radius: 4px;
+            background: #1a73e8;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        button:hover {
+            background: #1557b0;
+        }
+
+        button i {
+            font-size: 12px;
+        }
+
+        #gl-canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: #2d2d2d;
+            max-height: calc(100vh - 30px);
+            width: auto;
+            height: auto;
+        }
+
+        .toggle-button {
+            background: #34a853;
+        }
+
+        .toggle-button.off {
+            background: #ea4335;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="control-panel">
+            <div class="control-section">
+                <h3>Status</h3>
+                <div class="status-display">
+                    <span class="status-label">Subdivisions:</span>
+                    <span class="status-value" id="subdivValue">0</span>
+                    <span class="status-label">Obj θ:</span>
+                    <span class="status-value" id="thetaValue">0.0</span>
+                    <span class="status-label">Obj φ:</span>
+                    <span class="status-value" id="phiValue">0.0</span>
+                    <span class="status-label">Cam θ:</span>
+                    <span class="status-value" id="cameraThetaValue">0.8</span>
+                    <span class="status-label">Cam φ:</span>
+                    <span class="status-value" id="cameraPhiValue">0.8</span>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>Features</h3>
+                <button id="toggleLighting" class="toggle-button">
+                    <i class="fas fa-lightbulb"></i>
+                    Lighting: <span id="lightingStatus">On</span>
+                </button>
+                <button id="toggleTexture" class="toggle-button">
+                    <i class="fas fa-image"></i>
+                    Texture: <span id="textureStatus">On</span>
+                </button>
+                <button id="toggleAxes" class="toggle-button">
+                    <i class="fas fa-arrows-alt"></i>
+                    Axes: <span id="axesStatus">On</span>
+                </button>
+            </div>
+
+            <div class="control-section">
+                <h3>Subdivisions</h3>
+                <button id="Button0"><i class="fas fa-plus"></i>Increase</button>
+                <button id="Button1"><i class="fas fa-minus"></i>Decrease</button>
+            </div>
+
+            <div class="control-section">
+                <h3>Object Rotation</h3>
+                <button id="Button2"><i class="fas fa-arrow-up"></i>θ Up</button>
+                <button id="Button3"><i class="fas fa-arrow-down"></i>θ Down</button>
+                <button id="Button4"><i class="fas fa-arrow-right"></i>φ Right</button>
+                <button id="Button5"><i class="fas fa-arrow-left"></i>φ Left</button>
+            </div>
+
+            <div class="control-section">
+                <h3>Camera</h3>
+                <button id="CameraUp"><i class="fas fa-camera"></i><i class="fas fa-arrow-up"></i>θ Up</button>
+                <button id="CameraDown"><i class="fas fa-camera"></i><i class="fas fa-arrow-down"></i>θ Down</button>
+                <button id="CameraRight"><i class="fas fa-camera"></i><i class="fas fa-arrow-right"></i>φ Right</button>
+                <button id="CameraLeft"><i class="fas fa-camera"></i><i class="fas fa-arrow-left"></i>φ Left</button>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="gl-canvas" width="512" height="512">
+                Oops ... your browser doesn't support the HTML5 canvas element
+            </canvas>
+        </div>
+    </div>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
+
+// Vertex attributes
+in vec4 aPosition;
+in vec4 aNormal;
+in vec2 aTexCoord;
+in vec4 aColor;
+out vec4 vColor;
+out vec2 vTexCoord;
+
+// Add lighting toggle uniform
+uniform bool uLightingEnabled;
+// Add texture toggle uniform
+uniform bool uTextureEnabled;
+// Add flag to indicate if we're drawing axes
+uniform bool uDrawingAxes;
+
+// Material and light properties
+uniform vec4 uAmbientProduct;
+uniform vec4 uDiffuseProduct;
+uniform vec4 uSpecularProduct;
+uniform vec4 uLightPosition;
+uniform float uShininess;
+
+// Transformation matrices
+uniform mat4 uModelMatrix;
+uniform mat4 uViewMatrix;
+uniform mat4 uProjectionMatrix;
+uniform mat3 uNormalMatrix;
+
+void main() {
+    vec4 worldPos = uModelMatrix * aPosition;
+    vec4 viewPos = uViewMatrix * worldPos;
+    vec3 pos = viewPos.xyz;
+
+    vTexCoord = aTexCoord;
+
+    if (uDrawingAxes) {
+        // For axes, use the direct color
+        vColor = aColor;
+    } else {
+        // For the tetrahedron
+        if(uLightingEnabled) {
+            vec3 N = normalize(uNormalMatrix * aNormal.xyz);
+            vec3 L = normalize(uLightPosition.xyz - worldPos.xyz);
+            vec3 V = normalize(-pos);
+            vec3 H = normalize(L + V);
+
+            float Kd = max(dot(L, N), 0.0);
+            float Ks = pow(max(dot(N, H), 0.0), uShininess);
+
+            vec4 ambient = uAmbientProduct;
+            vec4 diffuse = vec4(0.0);
+            vec4 specular = vec4(0.0);
+
+            if(dot(L, N) > 0.0) {
+                diffuse = Kd * uDiffuseProduct;
+                specular = Ks * uSpecularProduct;
+            }
+
+            vColor = ambient + diffuse + specular;
+        } else {
+            vColor = uDiffuseProduct;
+        }
+    }
+
+    gl_Position = uProjectionMatrix * viewPos;
+    vColor.a = 1.0;
+}
+</script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
+precision mediump float;
+
+in vec4 vColor;
+in vec2 vTexCoord;
+out vec4 fColor;
+
+uniform sampler2D uTexture;
+uniform bool uTextureEnabled;
+
+void main() {
+    if(uTextureEnabled) {
+        vec4 texColor = texture(uTexture, vTexCoord);
+        fColor = texColor * vColor;
+    } else {
+        fColor = vColor;
+    }
+}
+</script>
+
+    <script type="module" src="MV.js"></script>
+    <script type="module" src="initShaders.js"></script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
